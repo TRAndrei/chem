@@ -75,13 +75,13 @@
             }
 
             this.matter.world.on('collisionstart', function (event, bodyA, bodyB) {
-                /*if (bodyA.gameObject && bodyB.gameObject) {
-                    bodyA.gameObject.setText(bodyA.gameObject.text - 0 + 1);
-                    bodyB.gameObject.setText(bodyB.gameObject.text - 0 + 1);
+                if (bodyA.gameObject && bodyB.gameObject) {
+                    bodyA.gameObject.setText(bodyA.gameObject.getText() - 0 + 1);
+                    bodyB.gameObject.setText(bodyB.gameObject.getText() - 0 + 1);
 
-                    if (bodyA.gameObject.text == bodyB.gameObject.text)
+                    if (bodyA.gameObject.getText() == bodyB.gameObject.getText())
                         this.scene.matter.add.joint(bodyA, bodyB, 95, 0.4);
-                }*/
+                }
 
             });
         }
@@ -92,7 +92,7 @@
 
         class Element extends Phaser.GameObjects.Container {
             constructor(scene, x, y, maxSpeed) {
-                var text = scene.add.text(0, 0, "E0", { font: '12px Arial', fill: '#00ff00' });
+                var text = scene.add.text(-10, 0, "E0", { font: '12px Arial', fill: '#00ff00' });
                 var picture = scene.add.image(0, 0, 'element');
                 super(scene, x, y, [picture, text]);
                 // ...
@@ -104,6 +104,14 @@
 
                 this.setFrictionAir(0).setBounce(1).setMass(10);
                 this.setVelocity(Phaser.Math.Between(-maxSpeed, maxSpeed), Phaser.Math.Between(-maxSpeed, maxSpeed))
+            }
+
+            getText() {
+                return this.textObj.text
+            }
+
+            setText(text) {
+                this.textObj.setText(text)
             }
         }
     </script>
