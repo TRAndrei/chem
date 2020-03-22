@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Making your first Phaser 3 Game - Part 1</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <script type="text/javascript">
+        var w = 1920
+        var h = 1000
+        var config = {
+            type: Phaser.AUTO,
+            width: w,
+            height: h,
+            physics: {
+                default: 'matter',
+                matter: {
+                    gravity: 0,
+                    debug: true
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        }
+
+        var game = new Phaser.Game(config)
+        var platforms
+        var cursors
+        var score = 0;
+        var scoreText;
+
+        function preload() {
+            this.load.image('element', 'assets/red circle.png');
+        }
+
+        function create() {
+
+            var worldBounds = new Phaser.Geom.Rectangle(0, 0, (w * 4), (h * 4), 100);
+
+            this.matter.world.setBounds(0, 0, worldBounds.width, worldBounds.height).disableGravity();
+
+            var controlConfig = {
+                camera: this.cameras.main,
+                left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+                right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+                up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+                down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+                zoomIn: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
+                zoomOut: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
+                speed: 1,
+                acceleration: 0.05,
+                drag: 0.0,
+                maxSpeed: 10.0,
+                zoom: 0.3
+            };
+
+            controls = new Phaser.Cameras.Controls.FixedKeyControl(controlConfig);
+            this.cameras.main.setBounds(worldBounds.x, worldBounds.y, worldBounds.width, worldBounds.height, true)
+            this.matter.add.mouseSpring();
+
+            for (var i = 0; i < 150; i++) {
+                new Element(this, Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 5)
+            }
+
+            this.matter.world.on('collisionstart', function (event, bodyA, bodyB) {
+                /*if (bodyA.gameObject && bodyB.gameObject) {
+                    bodyA.gameObject.setText(bodyA.gameObject.text - 0 + 1);
+                    bodyB.gameObject.setText(bodyB.gameObject.text - 0 + 1);
+
+                    if (bodyA.gameObject.text == bodyB.gameObject.text)
+                        this.scene.matter.add.joint(bodyA, bodyB, 95, 0.4);
+                }*/
+
+            });
+        }
+
+        function update(time, delta) {
+            controls.update(delta);
+        }
+
+        class Element extends Phaser.GameObjects.Container {
+            constructor(scene, x, y, maxSpeed) {
+                var text = scene.add.text(0, 0, "E0", { font: '12px Arial', fill: '#00ff00' });
+                var picture = scene.add.image(0, 0, 'element');
+                super(scene, x, y, [picture, text]);
+                // ...
+                scene.add.existing(this);
+                this.setSize(50, 50);
+
+                this.textObj = text
+                this.physicsContainer = scene.matter.add.gameObject(this, { shape: { type: 'circle', radius: 25 } });
+
+                this.setFrictionAir(0).setBounce(1).setMass(10);
+                this.setVelocity(Phaser.Math.Between(-maxSpeed, maxSpeed), Phaser.Math.Between(-maxSpeed, maxSpeed))
+            }
+        }
+    </script>
+
+</body>
+
+</html>
