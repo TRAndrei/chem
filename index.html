@@ -43,6 +43,7 @@
 
         function preload() {
             this.load.image('element', 'assets/red circle.png');
+            this.load.json('levelData', 'assets/levelData.json');
         }
 
         function create() {
@@ -70,17 +71,20 @@
             this.cameras.main.setBounds(worldBounds.x, worldBounds.y, worldBounds.width, worldBounds.height, true)
             this.matter.add.mouseSpring();
 
-            for (var i = 0; i < 150; i++) {
-                new Element(this, Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 5)
+            // load elements and rules
+            var levelData = this.cache.json.get('levelData');
+
+            levelData.elements.forEach(elem => new Element(this, elem.type, elem.x, elem.y, 5))
+            levelData.connections.forEach(elem => new Element(this, elem.type, elem.x, elem.y, 5))
+
+            for (var i = 0; i < 0; i++) {
+                new Element(this, "E0", Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 5)
             }
 
             this.matter.world.on('collisionstart', function (event, bodyA, bodyB) {
                 if (bodyA.gameObject && bodyB.gameObject) {
-                    bodyA.gameObject.setText(bodyA.gameObject.getText() - 0 + 1);
-                    bodyB.gameObject.setText(bodyB.gameObject.getText() - 0 + 1);
-
                     if (bodyA.gameObject.getText() == bodyB.gameObject.getText())
-                        this.scene.matter.add.joint(bodyA, bodyB, 95, 0.4);
+                        this.scene.matter.add.joint(bodyA, bodyB, 95, 0.5);
                 }
 
             });
@@ -91,8 +95,8 @@
         }
 
         class Element extends Phaser.GameObjects.Container {
-            constructor(scene, x, y, maxSpeed) {
-                var text = scene.add.text(-10, 0, "E0", { font: '12px Arial', fill: '#00ff00' });
+            constructor(scene, type, x, y, maxSpeed) {
+                var text = scene.add.text(-10, 0, type, { font: '12px Arial', fill: '#00ff00' });
                 var picture = scene.add.image(0, 0, 'element');
                 super(scene, x, y, [picture, text]);
                 // ...
@@ -102,7 +106,7 @@
                 this.textObj = text
                 this.physicsContainer = scene.matter.add.gameObject(this, { shape: { type: 'circle', radius: 25 } });
 
-                this.setFrictionAir(0).setBounce(1).setMass(10);
+                this.setFrictionAir(0).setBounce(1).setMass(1);
                 this.setVelocity(Phaser.Math.Between(-maxSpeed, maxSpeed), Phaser.Math.Between(-maxSpeed, maxSpeed))
             }
 
