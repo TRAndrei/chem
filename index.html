@@ -36,6 +36,7 @@
         }
 
         var game = new Phaser.Game(config)
+        var graphics
         var platforms
         var cursors
         var score = 0;
@@ -67,11 +68,15 @@
                 zoom: 0.3
             };
 
+            this.graphics = this.add.graphics()
+
             controls = new Phaser.Cameras.Controls.FixedKeyControl(controlConfig);
-            this.cameras.main.setBounds(worldBounds.x, worldBounds.y, worldBounds.width, worldBounds.height, true)
+            this.cameras.main.setBounds(-w / 2, -h / 2, worldBounds.width + w / 2, worldBounds.height + h / 2, true)
             this.input.on('wheel', function (pointer, currentlyOver, dx, dy, dz, event) {
                 zoom_mousewheel(this.cameras.main, pointer, currentlyOver, dx, dy, dz, event);
             })
+
+            var worldCamera = this.cameras.main;
 
             this.matter.add.mouseSpring();
 
@@ -99,22 +104,22 @@
         }
 
         function zoom_mousewheel(camera, pointer, currentlyOver, dx, dy, dz, event) {
-            var wheelDelt = - dy * 0.001;
+            var wheelDelt = - dy * 0.01;
             var delt = Math.max(-1, Math.min(1, (wheelDelt)));
 
-            camera.zoom += delt/5;
-            if (camera.zoom > 3)
-                camera.zoom = 3
-            if (camera.zoom < 0.25)
-                camera.zoom = 0.25
+            var centerPoint = camera.midPoint
 
-            var centerPoint = camera.getWorldPoint(camera.centerX, camera.centerY)
+            var xAdjust = (pointer.x - camera.centerX) * delt;
+            var yAdjust = (pointer.y - camera.centerY) * delt;
 
-            var xAdjust = (pointer.worldX - centerPoint.x) * delt;
-            var yAdjust = (pointer.worldY - centerPoint.y) * delt;
-
-            camera.scrollX += xAdjust;
-            camera.scrollY += yAdjust
+            var deltaZoom = (2 * camera.zoom * camera.zoom * xAdjust) / (2 * pointer.x - camera.width - 2 * camera.zoom * xAdjust)
+            var newZoom = camera.zoom + deltaZoom
+            if (isFinite(deltaZoom) && newZoom < 4 && newZoom > 0.05) {
+                camera.zoom += deltaZoom
+                camera.scrollX += xAdjust;
+                camera.scrollY += yAdjust
+            }
+           
             console.log("Mx " + pointer.worldX + " My " + pointer.worldY + " x " + camera.scrollX + " y " + camera.scrollY)
         }
 
