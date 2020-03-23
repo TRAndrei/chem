@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <title>Chem</title>
     <script src="//cdn.jsdelivr.net/npm/phaser@3.18.0/dist/phaser.js"></script>
+    <script src="./js/helper.js"></script>
     <style type="text/css">
         body {
             margin: 0;
@@ -41,6 +42,8 @@
         var cursors
         var score = 0;
         var scoreText;
+
+        var linksMap = new Map()
 
         function preload() {
             this.load.image('element', 'assets/red circle.png');
@@ -83,7 +86,7 @@
             // load elements and rules
             var levelData = this.cache.json.get('levelData');
             createLevel(levelData)
-            
+
 
             for (var i = 0; i < 50; i++) {
                 new Element(this, "E0", Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 0)
@@ -108,7 +111,15 @@
 
             levelData.elements.forEach(elem => elementMap.set(elem.id, new Element(scene, elem.type, elem.x, elem.y, 0)))
 
-            levelData.connections.forEach(conn => scene.matter.add.joint(elementMap.get(conn.first), elementMap.get(conn.second), 95, 0.99))
+            levelData.connections.forEach(conn => { 
+                var first = elementMap.get(conn.first)
+                var second = elementMap.get(conn.second)
+                var link = scene.matter.add.joint(first, second, 60, 0.99) 
+                first.neighbors.push(conn.second)
+                second.neighbors.push(conn.first)
+
+                computeIfAbsent(linksMap, conn.id, k => new Array()).push(link)
+            })
         }
 
         function zoom_mousewheel(camera, pointer, currentlyOver, dx, dy, dz, event) {
@@ -122,12 +133,13 @@
 
             var deltaZoom = (2 * camera.zoom * camera.zoom * xAdjust) / (2 * pointer.x - camera.width - 2 * camera.zoom * xAdjust)
             var newZoom = camera.zoom + deltaZoom
+
             if (isFinite(deltaZoom) && newZoom < 4 && newZoom > 0.20) {
                 camera.zoom += deltaZoom
                 camera.scrollX += xAdjust;
                 camera.scrollY += yAdjust
             }
-           
+
             console.log("Mx " + pointer.worldX + " My " + pointer.worldY + " x " + camera.scrollX + " y " + camera.scrollY)
         }
 
@@ -145,6 +157,7 @@
 
                 this.setFrictionAir(0).setFriction(0).setBounce(1).setMass(1);
                 this.setVelocity(Phaser.Math.Between(-maxSpeed, maxSpeed), Phaser.Math.Between(-maxSpeed, maxSpeed))
+                this.neighbors = []
             }
 
             getText() {
