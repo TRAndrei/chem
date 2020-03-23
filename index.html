@@ -82,9 +82,8 @@
 
             // load elements and rules
             var levelData = this.cache.json.get('levelData');
-
-            levelData.elements.forEach(elem => new Element(this, elem.type, elem.x, elem.y, 0))
-            levelData.connections.forEach(elem => new Element(this, elem.type, elem.x, elem.y, 0))
+            createLevel(levelData)
+            
 
             for (var i = 0; i < 50; i++) {
                 new Element(this, "E0", Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 0)
@@ -101,6 +100,15 @@
 
         function update(time, delta) {
             controls.update(delta);
+        }
+
+        function createLevel(levelData) {
+            var scene = game.scene.scenes[0]
+            var elementMap = new Map()
+
+            levelData.elements.forEach(elem => elementMap.set(elem.id, new Element(scene, elem.type, elem.x, elem.y, 0)))
+
+            levelData.connections.forEach(conn => scene.matter.add.joint(elementMap.get(conn.first), elementMap.get(conn.second), 95, 0.99))
         }
 
         function zoom_mousewheel(camera, pointer, currentlyOver, dx, dy, dz, event) {
