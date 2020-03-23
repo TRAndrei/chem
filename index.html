@@ -3,8 +3,8 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Making your first Phaser 3 Game - Part 1</title>
-    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <title>Chem</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.18.0/dist/phaser.js"></script>
     <style type="text/css">
         body {
             margin: 0;
@@ -16,7 +16,7 @@
 
     <script type="text/javascript">
         var w = 1920
-        var h = 1000
+        var h = 965
         var config = {
             type: Phaser.AUTO,
             width: w,
@@ -48,9 +48,9 @@
 
         function create() {
 
-            var worldBounds = new Phaser.Geom.Rectangle(0, 0, (w * 4), (h * 4), 100);
+            var worldBounds = new Phaser.Geom.Rectangle(0, 0, (w * 4), (h * 4));
 
-            this.matter.world.setBounds(0, 0, worldBounds.width, worldBounds.height).disableGravity();
+            this.matter.world.setBounds(0, 0, worldBounds.width, worldBounds.height, 100).disableGravity();
 
             var controlConfig = {
                 camera: this.cameras.main,
@@ -69,22 +69,26 @@
 
             controls = new Phaser.Cameras.Controls.FixedKeyControl(controlConfig);
             this.cameras.main.setBounds(worldBounds.x, worldBounds.y, worldBounds.width, worldBounds.height, true)
+            this.input.on('wheel', function (pointer, currentlyOver, dx, dy, dz, event) {
+                zoom_mousewheel(this.cameras.main, pointer, currentlyOver, dx, dy, dz, event);
+            })
+
             this.matter.add.mouseSpring();
 
             // load elements and rules
             var levelData = this.cache.json.get('levelData');
 
-            levelData.elements.forEach(elem => new Element(this, elem.type, elem.x, elem.y, 5))
-            levelData.connections.forEach(elem => new Element(this, elem.type, elem.x, elem.y, 5))
+            levelData.elements.forEach(elem => new Element(this, elem.type, elem.x, elem.y, 0))
+            levelData.connections.forEach(elem => new Element(this, elem.type, elem.x, elem.y, 0))
 
-            for (var i = 0; i < 0; i++) {
-                new Element(this, "E0", Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 5)
+            for (var i = 0; i < 50; i++) {
+                new Element(this, "E0", Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 0)
             }
 
             this.matter.world.on('collisionstart', function (event, bodyA, bodyB) {
                 if (bodyA.gameObject && bodyB.gameObject) {
                     if (bodyA.gameObject.getText() == bodyB.gameObject.getText())
-                        this.scene.matter.add.joint(bodyA, bodyB, 95, 0.5);
+                        this.scene.matter.add.joint(bodyA, bodyB, 95, 0.99);
                 }
 
             });
@@ -92,6 +96,26 @@
 
         function update(time, delta) {
             controls.update(delta);
+        }
+
+        function zoom_mousewheel(camera, pointer, currentlyOver, dx, dy, dz, event) {
+            var wheelDelt = - dy * 0.001;
+            var delt = Math.max(-1, Math.min(1, (wheelDelt)));
+
+            camera.zoom += delt/5;
+            if (camera.zoom > 3)
+                camera.zoom = 3
+            if (camera.zoom < 0.25)
+                camera.zoom = 0.25
+
+            var centerPoint = camera.getWorldPoint(camera.centerX, camera.centerY)
+
+            var xAdjust = (pointer.worldX - centerPoint.x) * delt;
+            var yAdjust = (pointer.worldY - centerPoint.y) * delt;
+
+            camera.scrollX += xAdjust;
+            camera.scrollY += yAdjust
+            console.log("Mx " + pointer.worldX + " My " + pointer.worldY + " x " + camera.scrollX + " y " + camera.scrollY)
         }
 
         class Element extends Phaser.GameObjects.Container {
@@ -106,7 +130,7 @@
                 this.textObj = text
                 this.physicsContainer = scene.matter.add.gameObject(this, { shape: { type: 'circle', radius: 25 } });
 
-                this.setFrictionAir(0).setBounce(1).setMass(1);
+                this.setFrictionAir(0).setFriction(0).setBounce(1).setMass(1);
                 this.setVelocity(Phaser.Math.Between(-maxSpeed, maxSpeed), Phaser.Math.Between(-maxSpeed, maxSpeed))
             }
 
