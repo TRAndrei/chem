@@ -71,7 +71,7 @@
             this.graphics = this.add.graphics()
 
             controls = new Phaser.Cameras.Controls.FixedKeyControl(controlConfig);
-            this.cameras.main.setBounds(-w / 2, -h / 2, worldBounds.width + w / 2, worldBounds.height + h / 2, true)
+            this.cameras.main.setBounds(-450, -450, worldBounds.width + 450, worldBounds.height + 450, true)
             this.input.on('wheel', function (pointer, currentlyOver, dx, dy, dz, event) {
                 zoom_mousewheel(this.cameras.main, pointer, currentlyOver, dx, dy, dz, event);
             })
@@ -114,7 +114,7 @@
 
             var deltaZoom = (2 * camera.zoom * camera.zoom * xAdjust) / (2 * pointer.x - camera.width - 2 * camera.zoom * xAdjust)
             var newZoom = camera.zoom + deltaZoom
-            if (isFinite(deltaZoom) && newZoom < 4 && newZoom > 0.05) {
+            if (isFinite(deltaZoom) && newZoom < 4 && newZoom > 0.20) {
                 camera.zoom += deltaZoom
                 camera.scrollX += xAdjust;
                 camera.scrollY += yAdjust
