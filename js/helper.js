@@ -32,7 +32,7 @@ function removeJoint(matter, firstElement, secondElement, jointId) {
 
 class Element extends Phaser.GameObjects.Container {
   constructor(scene, id, type, x, y, maxSpeed) {
-    var text = scene.add.text(-10, 0, type, { font: '12px Arial', fill: '#00ff00' });
+    var text = scene.add.text(-10, 5, type, { font: '12px Arial', fill: '#00ff00' });
     var picture = scene.add.image(0, 0, 'element');
     super(scene, x, y, [picture, text]);
 
@@ -42,7 +42,9 @@ class Element extends Phaser.GameObjects.Container {
     this.textObj = text
     this.physicsContainer = scene.matter.add.gameObject(this, { shape: { type: 'circle', radius: 25 } });
 
-    this.setFrictionAir(0).setFriction(0).setBounce(1).setMass(1000);
+    this.setFriction(0,0,0).setBounce(1).setMass(1000)
+    this.body.inertia = Infinity;
+    this.body.inverseInertia = 0
     this.setVelocity(Phaser.Math.Between(-maxSpeed, maxSpeed), Phaser.Math.Between(-maxSpeed, maxSpeed))
     this.links = new Map()
     this.id = id

@@ -46,11 +46,16 @@
         var linksMap = new Map()
 
         function preload() {
+            this.load.image('pause', 'assets/pause.jpg');
             this.load.image('element', 'assets/red circle.png');
             this.load.json('levelData', 'assets/levelData.json');
         }
 
         function create() {
+
+            var pauseText = this.add.image(w/2, h/2, 'pause');;
+            pauseText.setScrollFactor(0, 0)
+            pauseText.visible = false
 
             var worldBounds = new Phaser.Geom.Rectangle(0, 0, (w * 4), (h * 4));
 
@@ -76,7 +81,22 @@
             controls = new Phaser.Cameras.Controls.FixedKeyControl(controlConfig);
             this.cameras.main.setBounds(-450, -450, worldBounds.width + 450, worldBounds.height + 450, true)
             this.input.on('wheel', function (pointer, currentlyOver, dx, dy, dz, event) {
-                zoom_mousewheel(this.cameras.main, pointer, currentlyOver, dx, dy, dz, event);
+                zoom_mousewheel(this.cameras.main, pauseText, pointer, currentlyOver, dx, dy, dz, event);
+            })
+
+            this.input.on('pointerdown', function (pointer, currentlyOver, dx, dy, dz, event) {
+                // middle button
+                if (pointer.button == 1) {
+                    var matter = game.scene.scenes[0].matter
+                    if (matter.world.enabled) {
+                        matter.pause()
+                        pauseText.visible = true
+                    }
+                    else {
+                        matter.resume()
+                        pauseText.visible = false
+                    }
+                }
             })
 
             var worldCamera = this.cameras.main;
@@ -128,7 +148,7 @@
             })
         }
 
-        function zoom_mousewheel(camera, pointer, currentlyOver, dx, dy, dz, event) {
+        function zoom_mousewheel(camera, pauseText, pointer, currentlyOver, dx, dy, dz, event) {
             var wheelDelt = - dy * 0.01;
             var delt = Math.max(-1, Math.min(1, (wheelDelt)));
 
@@ -144,6 +164,7 @@
                 camera.zoom += deltaZoom
                 camera.scrollX += xAdjust;
                 camera.scrollY += yAdjust
+                pauseText.setScale(1/camera.zoom)
             }
 
             console.log("Mx " + pointer.worldX + " My " + pointer.worldY + " x " + camera.scrollX + " y " + camera.scrollY)
