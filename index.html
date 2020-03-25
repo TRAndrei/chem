@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <title>Chem</title>
     <script src="//cdn.jsdelivr.net/npm/phaser@3.18.0/dist/phaser.js"></script>
+    <script src="./js/helper.js"></script>
     <style type="text/css">
         body {
             margin: 0;
@@ -42,12 +43,19 @@
         var score = 0;
         var scoreText;
 
+        var linksMap = new Map()
+
         function preload() {
+            this.load.image('pause', 'assets/pause.jpg');
             this.load.image('element', 'assets/red circle.png');
             this.load.json('levelData', 'assets/levelData.json');
         }
 
         function create() {
+
+            var pauseText = this.add.image(w/2, h/2, 'pause');;
+            pauseText.setScrollFactor(0, 0)
+            pauseText.visible = false
 
             var worldBounds = new Phaser.Geom.Rectangle(0, 0, (w * 4), (h * 4));
 
@@ -73,7 +81,22 @@
             controls = new Phaser.Cameras.Controls.FixedKeyControl(controlConfig);
             this.cameras.main.setBounds(-450, -450, worldBounds.width + 450, worldBounds.height + 450, true)
             this.input.on('wheel', function (pointer, currentlyOver, dx, dy, dz, event) {
-                zoom_mousewheel(this.cameras.main, pointer, currentlyOver, dx, dy, dz, event);
+                zoom_mousewheel(this.cameras.main, pauseText, pointer, currentlyOver, dx, dy, dz, event);
+            })
+
+            this.input.on('pointerdown', function (pointer, currentlyOver, dx, dy, dz, event) {
+                // middle button
+                if (pointer.button == 1) {
+                    var matter = game.scene.scenes[0].matter
+                    if (matter.world.enabled) {
+                        matter.pause()
+                        pauseText.visible = true
+                    }
+                    else {
+                        matter.resume()
+                        pauseText.visible = false
+                    }
+                }
             })
 
             var worldCamera = this.cameras.main;
@@ -82,18 +105,23 @@
 
             // load elements and rules
             var levelData = this.cache.json.get('levelData');
+            createLevel(levelData)
+            var rules = levelData.rules.map(r => new Rule(r))
 
-            levelData.elements.forEach(elem => new Element(this, elem.type, elem.x, elem.y, 0))
-            levelData.connections.forEach(elem => new Element(this, elem.type, elem.x, elem.y, 0))
 
-            for (var i = 0; i < 50; i++) {
-                new Element(this, "E0", Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 0)
+            for (var i = 7; i < 500; i++) {
+                new Element(this, i.toString(), "E0", Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 20)
             }
 
             this.matter.world.on('collisionstart', function (event, bodyA, bodyB) {
-                if (bodyA.gameObject && bodyB.gameObject) {
-                    if (bodyA.gameObject.getText() == bodyB.gameObject.getText())
-                        this.scene.matter.add.joint(bodyA, bodyB, 95, 0.99);
+                if (bodyA.gameObject && bodyB.gameObject && !bodyA.gameObject.neighbors.has(bodyB.gameObject.id)) {
+                    rules.forEach(r => {
+                        if (r.isMatch(bodyA, bodyB)) {
+                            r.apply(this.scene.matter, bodyA.gameObject, bodyB.gameObject)
+                        } else if (r.isMatch(bodyB, bodyA)) {
+                            r.apply(this.scene.matter, bodyB.gameObject, bodyA.gameObject)
+                        }
+                    })
                 }
 
             });
@@ -103,7 +131,24 @@
             controls.update(delta);
         }
 
-        function zoom_mousewheel(camera, pointer, currentlyOver, dx, dy, dz, event) {
+        function createLevel(levelData) {
+            var scene = game.scene.scenes[0]
+            var elementMap = new Map()
+
+            levelData.elements.forEach(elem => elementMap.set(elem.id, new Element(scene, elem.id, elem.type, elem.x, elem.y, 20)))
+
+            levelData.connections.forEach(conn => {
+                var first = elementMap.get(conn.first)
+                var second = elementMap.get(conn.second)
+                var link = makeJoint(scene.matter, conn.id, first, second)
+                first.addLink(conn.id, conn.second, link)
+                second.addLink(conn.id, conn.first, link)
+
+                computeIfAbsent(linksMap, conn.id, k => new Array()).push(link)
+            })
+        }
+
+        function zoom_mousewheel(camera, pauseText, pointer, currentlyOver, dx, dy, dz, event) {
             var wheelDelt = - dy * 0.01;
             var delt = Math.max(-1, Math.min(1, (wheelDelt)));
 
@@ -114,39 +159,17 @@
 
             var deltaZoom = (2 * camera.zoom * camera.zoom * xAdjust) / (2 * pointer.x - camera.width - 2 * camera.zoom * xAdjust)
             var newZoom = camera.zoom + deltaZoom
+
             if (isFinite(deltaZoom) && newZoom < 4 && newZoom > 0.20) {
                 camera.zoom += deltaZoom
                 camera.scrollX += xAdjust;
                 camera.scrollY += yAdjust
+                pauseText.setScale(1/camera.zoom)
             }
-           
+
             console.log("Mx " + pointer.worldX + " My " + pointer.worldY + " x " + camera.scrollX + " y " + camera.scrollY)
         }
 
-        class Element extends Phaser.GameObjects.Container {
-            constructor(scene, type, x, y, maxSpeed) {
-                var text = scene.add.text(-10, 0, type, { font: '12px Arial', fill: '#00ff00' });
-                var picture = scene.add.image(0, 0, 'element');
-                super(scene, x, y, [picture, text]);
-                // ...
-                scene.add.existing(this);
-                this.setSize(50, 50);
-
-                this.textObj = text
-                this.physicsContainer = scene.matter.add.gameObject(this, { shape: { type: 'circle', radius: 25 } });
-
-                this.setFrictionAir(0).setFriction(0).setBounce(1).setMass(1);
-                this.setVelocity(Phaser.Math.Between(-maxSpeed, maxSpeed), Phaser.Math.Between(-maxSpeed, maxSpeed))
-            }
-
-            getText() {
-                return this.textObj.text
-            }
-
-            setText(text) {
-                this.textObj.setText(text)
-            }
-        }
     </script>
 
 </body>

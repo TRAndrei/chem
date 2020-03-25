@@ -1,25 +1,76 @@
 {
-	"rules": {
-		
-	},
-	"connections": [{
-		"type": "E0",
-		"x": 10,
-		"y": 10
-	},
-	{
-		"type": "E0",
-		"x": 50,
-		"y": 50
-	},
-	{
-		"type": "E0",
-		"x": 100,
-		"y": 100
-	}],
-	"elements": [{
-		"type": "E1",
-		"x": 150,
-		"y": 10
-	}]
+	"rules": [
+		{
+			"id": "new",
+			"firstTypeStart": "E0",
+			"secondTypeStart": "E1",
+			"firstTypeEnd": "E1",
+			"secondTypeEnd": "E1",
+			"makeLink":true,
+			"keepFirstLinks":[],
+			"removeFirstLinks":[],
+			"keepSecondLinks":[],
+			"removeSecondLinks":[]
+		}
+	],
+	"connections": [
+		{
+			"id": "A",
+			"first": "1",
+			"second": "2"
+		},
+		{
+			"id": "A",
+			"first": "1",
+			"second": "3"
+		},
+		{
+			"id": "A",
+			"first": "4",
+			"second": "5"
+		},
+		{
+			"id": "A",
+			"first": "4",
+			"second": "6"
+		}
+	],
+	"elements": [
+		{
+			"id": "1",
+			"type": "E2",
+			"x": 100,
+			"y": 100
+		},
+		{
+			"id": "2",
+			"type": "E1",
+			"x": 150,
+			"y": 100
+		},
+		{
+			"id": "3",
+			"type": "E1",
+			"x": 150,
+			"y": 150
+		},
+		{
+			"id": "4",
+			"type": "E2",
+			"x": 100,
+			"y": 150
+		},
+		{
+			"id": "5",
+			"type": "E1",
+			"x": 50,
+			"y": 100
+		},
+		{
+			"id": "6",
+			"type": "E1",
+			"x": 200,
+			"y": 100
+		}
+	]
 }
