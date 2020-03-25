@@ -1,38 +1,91 @@
 {
-	"rules": {},
+	"rules": [
+		{
+			"id": "new",
+			"start": {
+				"first": {
+					"type": "E0",
+					"idTag":"first",
+					"links": [
+						{
+							"ruleIdTag": "X",
+							"elementId": "id1"
+						}
+					]
+				},
+				"second": {
+					"type": "E5",
+					"idTag":"second",
+					"links": [
+						{
+							"ruleIdTag": "W",
+							"elementId": "id2"
+						}
+					]
+				}
+			},
+			"end": {
+				"first": {
+					"type": "E5",
+					"links": [
+						{
+							"id": "M",
+							"first": "first",
+							"second": "second"
+						},
+						{
+							"id": "X",
+							"first": "first",
+							"second":"id1"
+						}
+					]
+				},
+				"second": {
+					"type": "E5",
+					"links": [
+						{
+							"id": "M",
+							"first": "second",
+							"second": "id2"
+						}
+					]
+				}
+			}
+		}
+	],
 	"connections": [
 		{
-			"id":"1",
+			"id": "A",
 			"first": "1",
 			"second": "2"
 		},
 		{
-			"id":"1",
+			"id": "B",
 			"first": "2",
 			"second": "3"
 		},
 		{
-			"id":"1",
+			"id": "C",
 			"first": "3",
 			"second": "4"
 		},
 		{
-			"id":"1",
+			"id": "D",
 			"first": "4",
 			"second": "1"
 		},
 		{
-			"id":"1",
+			"id": "E",
 			"first": "1",
 			"second": "5"
 		},
 		{
-			"id":"1",
+			"id": "F",
 			"first": "2",
 			"second": "6"
 		},
 		{
-			"id":"1",
+			"id": "G",
 			"first": "3",
 			"second": "7"
 		}

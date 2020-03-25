@@ -86,6 +86,7 @@
             // load elements and rules
             var levelData = this.cache.json.get('levelData');
             createLevel(levelData)
+            var rules = levelData.rules.forEach(r => new Rule(r))
 
 
             for (var i = 0; i < 50; i++) {
@@ -94,8 +95,16 @@
 
             this.matter.world.on('collisionstart', function (event, bodyA, bodyB) {
                 if (bodyA.gameObject && bodyB.gameObject) {
-                    if (bodyA.gameObject.getText() == bodyB.gameObject.getText())
-                        this.scene.matter.add.joint(bodyA, bodyB, 95, 0.99);
+                    var firstType = bodyA.gameObject.getText()
+                    var secondType = bodyB.gameObject.getText()
+
+                    rules.forEach(r => {
+                        if (r.isMatch(bodyA.gameObject, bodyB.gameObject)) {
+                            r.apply(this.scene.matter, bodyA, bodyB)
+                        } else if (r.isMatch(bodyB.gameObject, bodyA.gameObject)) {
+                            r.apply(this.scene.matter, bodyB, bodyA)
+                        }
+                    })
                 }
 
             });
@@ -111,12 +120,12 @@
 
             levelData.elements.forEach(elem => elementMap.set(elem.id, new Element(scene, elem.type, elem.x, elem.y, 0)))
 
-            levelData.connections.forEach(conn => { 
+            levelData.connections.forEach(conn => {
                 var first = elementMap.get(conn.first)
                 var second = elementMap.get(conn.second)
-                var link = scene.matter.add.joint(first, second, 60, 0.99) 
-                first.neighbors.push(conn.second)
-                second.neighbors.push(conn.first)
+                var link = scene.matter.add.joint(first, second, 60, 0.99)
+                first.addLink(conn.id, conn.second)
+                second.addLink(conn.id, conn.first)
 
                 computeIfAbsent(linksMap, conn.id, k => new Array()).push(link)
             })
@@ -157,7 +166,8 @@
 
                 this.setFrictionAir(0).setFriction(0).setBounce(1).setMass(1);
                 this.setVelocity(Phaser.Math.Between(-maxSpeed, maxSpeed), Phaser.Math.Between(-maxSpeed, maxSpeed))
-                this.neighbors = []
+                this.links = new Map()
+                this.type = type
             }
 
             getText() {
@@ -166,6 +176,10 @@
 
             setText(text) {
                 this.textObj.setText(text)
+            }
+
+            addLink(linkType, other) {
+                computeIfAbsent(this.links, linkType, () => new Array).push(other)
             }
         }
     </script>
