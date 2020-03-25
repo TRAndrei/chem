@@ -10,39 +10,105 @@ function computeIfAbsent(map, key, func) {
   return newValue;
 }
 
+function makeJoint(matter, linkType, first, second) {
+  var joint = matter.add.joint(first, second, 60, 0.99)
+
+  first.addLink(linkType, second.id, joint)
+  second.addLink(linkType, first.id, joint)
+
+  return joint
+}
+
+function removeJoint(matter, firstElement, secondElement, jointId) {
+  var link = firstElement.gameObject.getLink(jointId, secondElement.gameObject)
+
+  if (link) {
+    firstElement.removeLink(jointId, secondElement)
+    secondElement.removeLink(jointId, firstElement)
+
+    matter.world.removeConstraint(link[1])
+  }
+}
+
+class Element extends Phaser.GameObjects.Container {
+  constructor(scene, id, type, x, y, maxSpeed) {
+    var text = scene.add.text(-10, 0, type, { font: '12px Arial', fill: '#00ff00' });
+    var picture = scene.add.image(0, 0, 'element');
+    super(scene, x, y, [picture, text]);
+
+    scene.add.existing(this);
+    this.setSize(50, 50);
+
+    this.textObj = text
+    this.physicsContainer = scene.matter.add.gameObject(this, { shape: { type: 'circle', radius: 25 } });
+
+    this.setFrictionAir(0).setFriction(0).setBounce(1).setMass(1000);
+    this.setVelocity(Phaser.Math.Between(-maxSpeed, maxSpeed), Phaser.Math.Between(-maxSpeed, maxSpeed))
+    this.links = new Map()
+    this.id = id
+  }
+
+  getType() {
+    return this.textObj.text
+  }
+
+  setType(text) {
+    this.textObj.setText(text)
+  }
+
+  addLink(linkType, otherElementId, link) {
+    computeIfAbsent(this.links, linkType, () => new Array).push([otherElementId, link])
+  }
+
+  getLink(linkType, otherElement) {
+    var typedLinks = this.links.get(linkType)
+
+    if (typedLinks) {
+      var otherId = otherElement.id
+      for (var idx = 0; idx < typedLinks.size; idx++) {
+        if (typedLinks[idx][0] === otherId) {
+          return [idx, typedLinks[idx]]
+        }
+      }
+    }
+  }
+
+  removeLink(linkType, otherElement) {
+    var link = getLink(linkType, otherElement)
+
+    if (link) {
+      var typedLinks = this.links.get(linkType)
+      typedLinks.splice(link[0], 1)
+    }
+  }
+}
+
+
 class Rule {
   constructor(ruleJson) {
     this.id = ruleJson.id
 
     // inputs
-    this.firstElementType = ruleJson.start.first.type
-    this.firstElementTag = ruleJson.start.first.idTag
-    this.firstLinks = new Map()
-    ruleJson.start.first.links.forEach(l => this.firstLinks.set(l.ruleIdTag, l.elementId))
-
-    this.secondElementType = ruleJson.start.second.type
-    this.secondElementTag = ruleJson.start.second.idTag
-    this.secondLinks = new Map()
-    ruleJson.start.second.links.forEach(l => this.secondLinks.set(l.ruleIdTag, l.elementId))
+    this.firstTypeStart = ruleJson.firstTypeStart
+    this.secondTypeStart = ruleJson.secondTypeStart
 
     // outputs
-    this.resultingFirstElementType = ruleJson.end.first.type
-    this.resultingFirstLinks = new Map()
-    ruleJson.end.first.links.forEach(l => this.resultingFirstLinks.set(l.first, [l.Id, l.second]))
+    this.firstTypeEnd = ruleJson.firstTypeEnd
+    this.secondTypeEnd = ruleJson.secondTypeEnd
 
-    this.resultigSecondElementType = ruleJson.end.second.type
-    this.resultingSecondLinks = new Map()
-    ruleJson.end.second.links.forEach(l => this.resultingSecondLinks.set(l.first, [l.Id, l.second]))
+    this.makeLink = ruleJson.makeLink
   }
 
   isMatch(first, second) {
-    return first.type === this.firstElementType && second.type === this.secondElementType
+    return first.gameObject.getType() === this.firstTypeStart && second.gameObject.getType() === this.secondTypeStart
   }
 
   apply(matter, first, second) {
-    first.type = this.resultigFirstElementType
-    second.type = this.resultigSecondElementType
+    first.setType(this.firstTypeEnd)
+    second.setType(this.secondTypeEnd)
 
-    matter.add.joint(first, second, 95, 0.99);
+    if (this.makeLink) {
+      makeJoint(matter, this.id, first, second)
+    }
   }
 }  

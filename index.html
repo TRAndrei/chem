@@ -86,23 +86,20 @@
             // load elements and rules
             var levelData = this.cache.json.get('levelData');
             createLevel(levelData)
-            var rules = levelData.rules.forEach(r => new Rule(r))
+            var rules = levelData.rules.map(r => new Rule(r))
 
 
             for (var i = 0; i < 50; i++) {
-                new Element(this, "E0", Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 0)
+                new Element(this, "", "E0", Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 0)
             }
 
             this.matter.world.on('collisionstart', function (event, bodyA, bodyB) {
                 if (bodyA.gameObject && bodyB.gameObject) {
-                    var firstType = bodyA.gameObject.getText()
-                    var secondType = bodyB.gameObject.getText()
-
                     rules.forEach(r => {
-                        if (r.isMatch(bodyA.gameObject, bodyB.gameObject)) {
-                            r.apply(this.scene.matter, bodyA, bodyB)
-                        } else if (r.isMatch(bodyB.gameObject, bodyA.gameObject)) {
-                            r.apply(this.scene.matter, bodyB, bodyA)
+                        if (r.isMatch(bodyA, bodyB)) {
+                            r.apply(this.scene.matter, bodyA.gameObject, bodyB.gameObject)
+                        } else if (r.isMatch(bodyB, bodyA)) {
+                            r.apply(this.scene.matter, bodyB.gameObject, bodyA.gameObject)
                         }
                     })
                 }
@@ -118,14 +115,14 @@
             var scene = game.scene.scenes[0]
             var elementMap = new Map()
 
-            levelData.elements.forEach(elem => elementMap.set(elem.id, new Element(scene, elem.type, elem.x, elem.y, 0)))
+            levelData.elements.forEach(elem => elementMap.set(elem.id, new Element(scene, elem.id, elem.type, elem.x, elem.y, 0)))
 
             levelData.connections.forEach(conn => {
                 var first = elementMap.get(conn.first)
                 var second = elementMap.get(conn.second)
-                var link = scene.matter.add.joint(first, second, 60, 0.99)
-                first.addLink(conn.id, conn.second)
-                second.addLink(conn.id, conn.first)
+                var link = makeJoint(scene.matter, conn.id, first, second)
+                first.addLink(conn.id, conn.second, link)
+                second.addLink(conn.id, conn.first, link)
 
                 computeIfAbsent(linksMap, conn.id, k => new Array()).push(link)
             })
@@ -152,36 +149,6 @@
             console.log("Mx " + pointer.worldX + " My " + pointer.worldY + " x " + camera.scrollX + " y " + camera.scrollY)
         }
 
-        class Element extends Phaser.GameObjects.Container {
-            constructor(scene, type, x, y, maxSpeed) {
-                var text = scene.add.text(-10, 0, type, { font: '12px Arial', fill: '#00ff00' });
-                var picture = scene.add.image(0, 0, 'element');
-                super(scene, x, y, [picture, text]);
-                // ...
-                scene.add.existing(this);
-                this.setSize(50, 50);
-
-                this.textObj = text
-                this.physicsContainer = scene.matter.add.gameObject(this, { shape: { type: 'circle', radius: 25 } });
-
-                this.setFrictionAir(0).setFriction(0).setBounce(1).setMass(1);
-                this.setVelocity(Phaser.Math.Between(-maxSpeed, maxSpeed), Phaser.Math.Between(-maxSpeed, maxSpeed))
-                this.links = new Map()
-                this.type = type
-            }
-
-            getText() {
-                return this.textObj.text
-            }
-
-            setText(text) {
-                this.textObj.setText(text)
-            }
-
-            addLink(linkType, other) {
-                computeIfAbsent(this.links, linkType, () => new Array).push(other)
-            }
-        }
     </script>
 
 </body>
