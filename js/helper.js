@@ -47,6 +47,7 @@ class Element extends Phaser.GameObjects.Container {
     this.body.inverseInertia = 0
     this.setVelocity(Phaser.Math.Between(-maxSpeed, maxSpeed), Phaser.Math.Between(-maxSpeed, maxSpeed))
     this.links = new Map()
+    this.neighbors = new Set()
     this.id = id
   }
 
@@ -60,6 +61,7 @@ class Element extends Phaser.GameObjects.Container {
 
   addLink(linkType, otherElementId, link) {
     computeIfAbsent(this.links, linkType, () => new Array).push([otherElementId, link])
+    this.neighbors.add(otherElementId)
   }
 
   getLink(linkType, otherElement) {
@@ -81,6 +83,7 @@ class Element extends Phaser.GameObjects.Container {
     if (link) {
       var typedLinks = this.links.get(linkType)
       typedLinks.splice(link[0], 1)
+      this.neighbors.remove(otherElement.id)
     }
   }
 }

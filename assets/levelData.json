@@ -3,9 +3,9 @@
 		{
 			"id": "new",
 			"firstTypeStart": "E0",
-			"secondTypeStart": "E5",
-			"firstTypeEnd": "E5",
-			"secondTypeEnd": "E6",
+			"secondTypeStart": "E1",
+			"firstTypeEnd": "E1",
+			"secondTypeEnd": "E1",
 			"makeLink":true,
 			"keepFirstLinks":[],
 			"removeFirstLinks":[],
@@ -20,78 +20,57 @@
 			"second": "2"
 		},
 		{
-			"id": "B",
-			"first": "2",
+			"id": "A",
+			"first": "1",
 			"second": "3"
 		},
 		{
-			"id": "C",
-			"first": "3",
-			"second": "4"
-		},
-		{
-			"id": "D",
+			"id": "A",
 			"first": "4",
-			"second": "1"
-		},
-		{
-			"id": "E",
-			"first": "1",
 			"second": "5"
 		},
 		{
-			"id": "F",
-			"first": "2",
+			"id": "A",
+			"first": "4",
 			"second": "6"
-		},
-		{
-			"id": "G",
-			"first": "3",
-			"second": "7"
 		}
 	],
 	"elements": [
 		{
 			"id": "1",
-			"type": "E1",
+			"type": "E2",
 			"x": 100,
 			"y": 100
 		},
 		{
 			"id": "2",
-			"type": "E2",
+			"type": "E1",
 			"x": 150,
 			"y": 100
 		},
 		{
 			"id": "3",
-			"type": "E3",
+			"type": "E1",
 			"x": 150,
 			"y": 150
 		},
 		{
 			"id": "4",
-			"type": "E4",
+			"type": "E2",
 			"x": 100,
 			"y": 150
 		},
 		{
 			"id": "5",
-			"type": "E5",
+			"type": "E1",
 			"x": 50,
 			"y": 100
 		},
 		{
 			"id": "6",
-			"type": "E6",
+			"type": "E1",
 			"x": 200,
 			"y": 100
-		},
-		{
-			"id": "7",
-			"type": "E7",
-			"x": 150,
-			"y": 200
 		}
 	]
 }

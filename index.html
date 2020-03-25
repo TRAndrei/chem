@@ -109,12 +109,12 @@
             var rules = levelData.rules.map(r => new Rule(r))
 
 
-            for (var i = 0; i < 50; i++) {
-                new Element(this, "", "E0", Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 0)
+            for (var i = 7; i < 500; i++) {
+                new Element(this, i.toString(), "E0", Phaser.Math.Between(50, worldBounds.width - 50), Phaser.Math.Between(50, worldBounds.height - 50), 20)
             }
 
             this.matter.world.on('collisionstart', function (event, bodyA, bodyB) {
-                if (bodyA.gameObject && bodyB.gameObject) {
+                if (bodyA.gameObject && bodyB.gameObject && !bodyA.gameObject.neighbors.has(bodyB.gameObject.id)) {
                     rules.forEach(r => {
                         if (r.isMatch(bodyA, bodyB)) {
                             r.apply(this.scene.matter, bodyA.gameObject, bodyB.gameObject)
@@ -135,7 +135,7 @@
             var scene = game.scene.scenes[0]
             var elementMap = new Map()
 
-            levelData.elements.forEach(elem => elementMap.set(elem.id, new Element(scene, elem.id, elem.type, elem.x, elem.y, 0)))
+            levelData.elements.forEach(elem => elementMap.set(elem.id, new Element(scene, elem.id, elem.type, elem.x, elem.y, 20)))
 
             levelData.connections.forEach(conn => {
                 var first = elementMap.get(conn.first)
